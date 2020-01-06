@@ -15,6 +15,20 @@ const decoder = require('child_process').spawn('ffmpeg', [
 ], { stdio: ['pipe', 'pipe', process.stderr] });
 process.stdin.pipe(decoder.stdin); //.write(data);
 
+/**
+ * BEGIN TEMP
+ */
+process.stdin.on("data", function(data) {
+	console.log(data);
+});
+
+decoder.stdout.on("end", function() {
+	console.log("stream ended");
+})
+/**
+ * END TEMP
+ */
+
 const Codegen = require("./codegen_landmark.js");
 const fingerprinter = new Codegen();
 decoder.stdout.pipe(fingerprinter);

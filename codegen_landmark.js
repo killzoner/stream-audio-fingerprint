@@ -82,7 +82,7 @@ for (let i=0; i<NFFT/2; i++) {
 }
 
 const VERBOSE = false;
-let DO_PLOT = true; // limit the amount of audio processing to ~12s, generate plots and stop the routine.
+let DO_PLOT = false; // limit the amount of audio processing to ~12s, generate plots and stop the routine.
 
 if (DO_PLOT) {
 	var fs = require('fs');
@@ -92,6 +92,17 @@ if (DO_PLOT) {
 class Codegen extends Transform {
 
 	constructor(options) {
+
+		/**
+		 * BEGIN TEMP
+		 */
+		super(options)
+		this.buffer = new Buffer(0);
+		return;
+		/**
+		 * END TEMP
+		 */
+
 		if (!options) options = {};
 		options.readableObjectMode = true;
 		options.highWaterMark = 10;
