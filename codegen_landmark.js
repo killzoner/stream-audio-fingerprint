@@ -308,25 +308,6 @@ class Codegen extends Transform {
 
 	plot() { // plot section
 
-		if (false) { // raw signal plot
-			let buf = new Array(this.buffer.length / BPS);
-			for (let i=0; i<buf.length; i++) {
-				buf[i] = this.buffer.readInt16LE(i);
-			}
-			var img = new png({width:buf.length,height:64});
-			img.data = new Buffer(img.width * img.height * 4);
-			var norm = minmax(buf, 1);
-
-			for (var x = 0; x < img.width; x++) {
-				for (var y = 0; y < img.height; y++) {
-					colormap(0, img.data, (img.width * y + x) << 2, null);
-				}
-				var yPoint = Math.round(((buf[x]-norm[0]) / (norm[1]-norm[0])) * 64);
-				colormap(1, img.data, (img.width * yPoint + x) << 2, null);
-			}
-			img.pack().pipe(fs.createWriteStream('out-raw.png'));
-		}
-
 		// fft plot
 		console.log("fftData len=" + this.fftData.length);
 		var img = new png({width:this.fftData.length,height:this.fftData[0].length});
