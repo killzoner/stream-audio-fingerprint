@@ -1,26 +1,28 @@
 use std::io::{self, BufRead};
-use std::thread;
+//use std::thread;
 
 use futures::{Future, Sink, Stream};
 use futures::stream::BoxStream;
-use futures::channel::mpsc::channel;
+//use futures::channel::mpsc::channel;
+use async_std::{fs::File, /*io,*/ prelude::*, task};
+use async_std::sync::channel as asyncChannel;
 
 use futures::{
     SinkExt // for rx/tx send & receive
 };
 
-fn stdin() -> impl Stream<String, io::Error> {
-    let (mut tx, rx) = channel(1);
-    thread::spawn(move || {
+async fn stdin() -> impl Stream<Item = String> {
+    let (mut tx, rx) = asyncChannel(1);
+    let reader_task = task::spawn(async {
         let input = io::stdin();
         for line in input.lock().lines() {
-            match tx.send(line).wait() {
-                Ok(s) => tx = s,
-                Err(_) => break,
+            match line {
+                Ok(s) => tx.send(s).await,
+                Err(_) => break
             }
         }
     });
-    rx.then(|e| e.unwrap())
+    rx
 }
 
 fn main() {
