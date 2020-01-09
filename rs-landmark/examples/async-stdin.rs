@@ -9,13 +9,8 @@ async fn stdin() -> impl Stream<Item = String> {
     loop {
         select! {
             line = lines.next().fuse() => match line {
-                Some(line) => {
-                    match line {
-                        Ok(s) => tx.send(s).await,
-                        Err(_) => break
-                    }
-                }
-                None => break,
+                Some(Ok(s)) => tx.send(s).await,
+                _ => break
             }
         }
     }
