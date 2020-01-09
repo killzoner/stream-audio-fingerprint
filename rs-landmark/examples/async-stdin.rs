@@ -21,9 +21,8 @@ fn main() {
     task::block_on( 
         async {
             let mut stdin = stdin().await;
-            while let Some(stream) = stdin.next().await {
-                let t:String = stream.clone();
-                println!("{:?}", t);
+            while let Some(s) = stdin.next().await {
+                println!("{:?}", s);
             }
         }
     );
