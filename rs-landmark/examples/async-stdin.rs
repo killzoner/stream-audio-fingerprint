@@ -1,29 +1,35 @@
 use async_std::{io, prelude::*, task};
 use async_std::io::BufReader;
-use async_std::sync::channel;
-use futures::{FutureExt, select, Stream};
+use futures::channel::mpsc;
+//use futures::{FutureExt, select, Stream};
+use futures::sink::SinkExt;
 
-async fn stdin() -> impl Stream<Item = String> {
-    let (tx, rx) = channel(1);
-    let mut lines = BufReader::new(io::stdin()).lines().fuse();
-    loop {
-        select! {
-            line = lines.next().fuse() => match line {
-                Some(Ok(s)) => tx.send(s).await,
-                _ => break
+type Sender<T> = mpsc::UnboundedSender<T>;
+//type Receiver<T> = mpsc::UnboundedReceiver<T>;
+//type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+async fn stdin(mut tx: Sender<String>) -> () {
+    let mut lines = BufReader::new(io::stdin()).lines();
+    while let Some(s) = lines.next().await {
+        match s {
+            Ok(s) => {
+                println!("{:?}", s);
+                tx.send(s).await.unwrap()
+            },
+            _ => {
+                drop(tx); 
+                break;
             }
         }
     }
-    rx
+}
+
+async fn run() {
+    let (stdin_sender, _stdin_receiver) = mpsc::unbounded::<String>();
+    let handle = task::spawn(stdin(stdin_sender));
+    handle.await
 }
 
 fn main() {
-    task::block_on( 
-        async {
-            let mut stdin = stdin().await;
-            while let Some(s) = stdin.next().await {
-                println!("{:?}", s);
-            }
-        }
-    );
+    task::block_on(run())
 }
