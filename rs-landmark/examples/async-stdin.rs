@@ -10,18 +10,11 @@ type Sender<T> = mpsc::UnboundedSender<T>;
 
 async fn stdin(mut tx: Sender<String>) -> () {
     let mut lines = BufReader::new(io::stdin()).lines();
-    while let Some(s) = lines.next().await {
-        match s {
-            Ok(s) => {
-                println!("{:?}", s);
-                tx.send(s).await.unwrap()
-            },
-            _ => {
-                drop(tx); 
-                break;
-            }
-        }
+    while let Some(Ok(s)) = lines.next().await {
+        println!("{:?}", s);
+        tx.send(s).await.unwrap()
     }
+    drop(tx);
 }
 
 async fn run() {
