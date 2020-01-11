@@ -14,7 +14,7 @@ async fn stdin(mut tx: Sender<String>) -> () {
         println!("{:?}", s);
         tx.send(s).await.unwrap()
     }
-    drop(tx);
+    //drop(tx);
 }
 
 async fn run() {
