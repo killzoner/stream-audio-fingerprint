@@ -1,30 +1,13 @@
 use std::error::Error;
 use std::io::prelude::*;
 use std::process::{Command, Stdio};
-use std::io::{self, Read};
+use std::io::{Read};
+use rs_landmark::stdin::{stdin_stream};
 
 static PANGRAM: &'static str = "the quick brown fox jumped over the lazy dog\n";
 
 fn main() {
-    // get current stdin
-    let mut buffer = String::new();
-    let stdin = match io::stdin().read_line(&mut buffer) {
-        Err(why) => panic!("couldn't read stdin: {}", why.description()),
-        Ok(process) => process,
-    };
-    let buffer = buffer.trim();
-    println!("{:?}", buffer);
-
-    /*
-    let mut r = io::stdin();
-    let mut buffer2 = String::new();
-    loop {
-        let b = r.read(&mut buffer2)();
-        if b.is_none() {
-            break;
-        }
-        println!("{}", b.unwrap());
-    }*/
+    let stdin_handle = stdin_stream();
 
     // spawn the ffmpeg command
     let decoder = match Command::new("ffmpeg")

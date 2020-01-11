@@ -1,5 +1,5 @@
 [package]
-name = "rs-landmark"
+name = "rs_landmark"
 version = "0.1.0"
 authors = ["killzoner"]
 edition = "2018"
