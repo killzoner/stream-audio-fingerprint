@@ -1,83 +1,62 @@
 use std::error::Error;
-use std::io::prelude::*;
 use std::process::{Command, Stdio};
-use std::io::{Read};
 use rs_landmark::stdin::{stdin_stream};
-use futures::channel::mpsc;
+//use futures::channel::mpsc;
 use async_std::{task};
-use futures::{select, StreamExt, FutureExt};
+use futures::{select, FutureExt};
+use async_std::sync::channel;
 
-static PANGRAM: &'static str = "the quick brown fox jumped over the lazy dog\n";
+const DEBUG_STDIN: bool = true;
 
 fn main() {
-    let (stdin_sender, mut stdin_receiver) = mpsc::unbounded::<String>();
+    //let (stdin_sender, mut stdin_receiver) = mpsc::unbounded::<String>();
+    let (stdin_sender, mut stdin_receiver) = channel::<String>(16);
     let stdin_handle = stdin_stream(false, stdin_sender);
-    let stdin_display = task::spawn(async move { 
-        loop {
-            select! {
-                msg = stdin_receiver.next().fuse() => match msg {
-                    Some(msg) => println!("{:?}", msg),
-                    None => break,
-                },
+    let stdin_display = task::spawn(async move {
+        if DEBUG_STDIN {
+            loop {
+                select! {
+                    msg = stdin_receiver.next().fuse() => match msg {
+                        Some(msg) => println!("{:?}", msg),
+                        None => break,
+                    },
+                    complete =>  {
+                        println!("end");
+                        break
+                    }
+                }
             }
         }
     });
-    task::block_on(stdin_handle);
+    use async_std::prelude::*;
+    task::block_on(stdin_handle.join(stdin_display));
 
     // spawn the ffmpeg command
-    let decoder = match Command::new("ffmpeg")
-        .args(&[
-            "-i",
-            "pipe:0",
-            "-acodec",
-            "pcm_s16le",
-            "-ar",
-            "22050",
-            "-ac",
-            "1",
-            "-f",
-            "wav",
-            "-v",
-            "fatal",
-            "pipe:1",
-        ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-    {
-        Err(why) => panic!("couldn't spawn ffmpeg: {}", why.description()),
-        Ok(process) => process,
-    };
-
-    // Spawn the `wc` command
-    let process = match Command::new("wc")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-    {
-        Err(why) => panic!("couldn't spawn wc: {}", why.description()),
-        Ok(process) => process,
-    };
-
-    // Write a string to the `stdin` of `wc`.
-    //
-    // `stdin` has type `Option<ChildStdin>`, but since we know this instance
-    // must have one, we can directly `unwrap` it.
-    match process.stdin.unwrap().write_all(PANGRAM.as_bytes()) {
-        Err(why) => panic!("couldn't write to wc stdin: {}", why.description()),
-        Ok(_) => println!("sent pangram to wc"),
-    }
-
-    // Because `stdin` does not live after the above calls, it is `drop`ed,
-    // and the pipe is closed.
-    //
-    // This is very important, otherwise `wc` wouldn't start processing the
-    // input we just sent.
-
-    // The `stdout` field also has type `Option<ChildStdout>` so must be unwrapped.
-    let mut s = String::new();
-    match process.stdout.unwrap().read_to_string(&mut s) {
-        Err(why) => panic!("couldn't read wc stdout: {}", why.description()),
-        Ok(_) => print!("wc responded with:\n{}", s),
-    }
+    let decoder = task::spawn_blocking( || {
+        let process = match Command::new("ffmpeg")
+            .args(&[
+                "-i",
+                "pipe:0",
+                "-acodec",
+                "pcm_s16le",
+                "-ar",
+                "22050",
+                "-ac",
+                "1",
+                "-f",
+                "wav",
+                "-v",
+                "fatal",
+                "pipe:1",
+            ])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+        {
+            Err(why) => panic!("couldn't spawn ffmpeg: {}", why.description()),
+            Ok(process) => process,
+        };
+        process
+    });
+    task::block_on(decoder);
 }

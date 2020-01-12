@@ -1,12 +1,12 @@
 use rs_landmark::stdin;
 use async_std::{task};
-use futures::channel::mpsc;
+use async_std::sync::channel;
 use futures::{select, FutureExt};
 
 const DEBUG: bool = true;
 
 fn main() {
-    let (sender, receiver) = mpsc::unbounded::<String>();
+    let (sender, receiver) = channel::<String>(16);
     task::block_on(async {
         let reader = task::spawn(async {
             if DEBUG {
