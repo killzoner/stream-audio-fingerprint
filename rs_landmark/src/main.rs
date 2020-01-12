@@ -3,11 +3,13 @@ use std::io::prelude::*;
 use std::process::{Command, Stdio};
 use std::io::{Read};
 use rs_landmark::stdin::{stdin_stream};
+use futures::channel::mpsc;
 
 static PANGRAM: &'static str = "the quick brown fox jumped over the lazy dog\n";
 
 fn main() {
-    let stdin_handle = stdin_stream();
+    let (stdin_sender, stdin_receiver) = mpsc::unbounded::<String>();
+    let stdin_handle = stdin_stream(true, stdin_sender, stdin_receiver);
 
     // spawn the ffmpeg command
     let decoder = match Command::new("ffmpeg")

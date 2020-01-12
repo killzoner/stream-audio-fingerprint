@@ -5,6 +5,7 @@ use futures::sink::SinkExt;
 use futures::{select, FutureExt};
 
 type Sender<T> = mpsc::UnboundedSender<T>;
+type Receiver<T> = mpsc::UnboundedReceiver<T>;
 
 async fn stdin(mut tx: Sender<String>) -> () {
     let mut lines = BufReader::new(io::stdin()).lines();
@@ -13,11 +14,13 @@ async fn stdin(mut tx: Sender<String>) -> () {
     }
 }
 
-pub async fn stdin_stream(debug: bool) {
-    let (stdin_sender, stdin_receiver) = mpsc::unbounded::<String>();
-    let handle = task::spawn(stdin(stdin_sender));
+pub async fn stdin_stream(
+    debug: bool, 
+    sender: Sender<String>,
+    receiver: Receiver<String>) {
+    let handle = task::spawn(stdin(sender));
     if debug {
-        let mut stdin_receiver = stdin_receiver.fuse();
+        let mut stdin_receiver = receiver.fuse();
         loop {
             select! {
                 msg = stdin_receiver.next().fuse() => match msg {
