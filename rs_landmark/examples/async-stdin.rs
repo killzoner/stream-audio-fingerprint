@@ -6,6 +6,8 @@ use futures::{select, FutureExt};
 
 type Sender<T> = mpsc::UnboundedSender<T>;
 
+const DEBUG: bool = true;
+
 async fn stdin(mut tx: Sender<String>) -> () {
     let mut lines = BufReader::new(io::stdin()).lines();
     while let Some(Ok(s)) = lines.next().await {
@@ -16,13 +18,15 @@ async fn stdin(mut tx: Sender<String>) -> () {
 async fn run() {
     let (stdin_sender, stdin_receiver) = mpsc::unbounded::<String>();
     let handle = task::spawn(stdin(stdin_sender));
-    let mut stdin_receiver = stdin_receiver.fuse();
-    loop {
-        select! {
-            msg = stdin_receiver.next().fuse() => match msg {
-                Some(msg) => println!("{:?}", msg),
-                None => break,
-            },
+    if DEBUG {
+        let mut stdin_receiver = stdin_receiver.fuse();
+        loop {
+            select! {
+                msg = stdin_receiver.next().fuse() => match msg {
+                    Some(msg) => println!("{:?}", msg),
+                    None => break,
+                },
+            }
         }
     }
     handle.await
