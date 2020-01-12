@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // Copyright (c) 2018 Alexandre Storelli
+const md5 = require('md5');
 
 const decoder = require('child_process').spawn('ffmpeg', [
 	'-i', 'pipe:0',
@@ -27,6 +28,9 @@ decoder.stdout.on("end", function() {
 	console.log("stream ended");
 });
 */
+decoder.stdout.on("data", function(data) {
+	console.log(md5(data.toString()));
+});
 /**
  * END TEMP
  */
