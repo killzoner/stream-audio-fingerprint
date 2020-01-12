@@ -29,6 +29,7 @@ decoder.stdout.on("end", function() {
 });
 */
 decoder.stdout.on("data", function(data) {
+	// to compare outputs from ffmpeg
 	console.log(md5(data.toString()));
 });
 /**
