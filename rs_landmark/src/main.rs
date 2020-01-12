@@ -17,10 +17,6 @@ fn main() {
                     msg = stdin_receiver.next().fuse() => match msg {
                         Some(msg) => println!("{:?}", msg),
                         None => break,
-                    },
-                    complete =>  {
-                        println!("end");
-                        break
                     }
                 }
             }
