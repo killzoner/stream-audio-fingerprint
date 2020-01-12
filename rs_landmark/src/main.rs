@@ -4,12 +4,25 @@ use std::process::{Command, Stdio};
 use std::io::{Read};
 use rs_landmark::stdin::{stdin_stream};
 use futures::channel::mpsc;
+use async_std::{task};
+use futures::{select, StreamExt, FutureExt};
 
 static PANGRAM: &'static str = "the quick brown fox jumped over the lazy dog\n";
 
 fn main() {
-    let (stdin_sender, stdin_receiver) = mpsc::unbounded::<String>();
-    let stdin_handle = stdin_stream(true, stdin_sender, stdin_receiver);
+    let (stdin_sender, mut stdin_receiver) = mpsc::unbounded::<String>();
+    let stdin_handle = stdin_stream(false, stdin_sender);
+    let stdin_display = task::spawn(async move { 
+        loop {
+            select! {
+                msg = stdin_receiver.next().fuse() => match msg {
+                    Some(msg) => println!("{:?}", msg),
+                    None => break,
+                },
+            }
+        }
+    });
+    task::block_on(stdin_handle);
 
     // spawn the ffmpeg command
     let decoder = match Command::new("ffmpeg")
