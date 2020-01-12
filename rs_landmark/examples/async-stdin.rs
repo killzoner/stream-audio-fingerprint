@@ -2,14 +2,13 @@ use rs_landmark::stdin;
 use async_std::{task};
 use futures::channel::mpsc;
 use futures::{select, FutureExt};
-use async_std::{prelude::*};
 
 const DEBUG: bool = true;
 
 fn main() {
     let (sender, receiver) = mpsc::unbounded::<String>();
     task::block_on(async {
-        task::spawn(async {
+        let reader = task::spawn(async {
             if DEBUG {
                 let mut stdin_receiver = receiver.fuse();
                 loop {
@@ -22,6 +21,8 @@ fn main() {
                 }
             };
         });
-        stdin::stdin_stream(DEBUG, sender).await
+        use async_std::prelude::*;
+        //wait for stdin and reader to have finished
+        stdin::stdin_stream(DEBUG, sender).join(reader).await;
     })
 }
