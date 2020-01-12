@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::process::{Command, Stdio};
 use rs_landmark::stdin::{stdin_stream};
-//use futures::channel::mpsc;
 use async_std::{task};
 use futures::{select, FutureExt};
 use async_std::sync::channel;
@@ -9,7 +8,6 @@ use async_std::sync::channel;
 const DEBUG_STDIN: bool = true;
 
 fn main() {
-    //let (stdin_sender, mut stdin_receiver) = mpsc::unbounded::<String>();
     let (stdin_sender, mut stdin_receiver) = channel::<String>(16);
     let stdin_handle = stdin_stream(false, stdin_sender);
     let stdin_display = task::spawn(async move {
