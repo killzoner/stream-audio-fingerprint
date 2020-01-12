@@ -96,9 +96,11 @@ class Codegen extends Transform {
 		/**
 		 * BEGIN TEMP
 		 */
+		/*
 		super(options)
 		this.buffer = new Buffer(0);
 		return;
+		*/
 		/**
 		 * END TEMP
 		 */

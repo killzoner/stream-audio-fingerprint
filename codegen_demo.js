@@ -18,13 +18,15 @@ process.stdin.pipe(decoder.stdin); //.write(data);
 /**
  * BEGIN TEMP
  */
+/*
 process.stdin.on("data", function(data) {
 	console.log(data);
 });
 
 decoder.stdout.on("end", function() {
 	console.log("stream ended");
-})
+});
+*/
 /**
  * END TEMP
  */
