@@ -1,13 +1,10 @@
 use std::error::Error;
 use std::io::prelude::*;
 use std::process::{Command, Stdio};
-use std::io::{Read};
-
-static PANGRAM: &'static str = "the quick brown fox jumped over the lazy dog\n";
+use std::io::{Read, BufReader};
 
 fn main() {
-    // Spawn the `wc` command
-    let process = match Command::new("wc")
+    let decoder = match Command::new("wc")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -15,14 +12,17 @@ fn main() {
         Err(why) => panic!("couldn't spawn wc: {}", why.description()),
         Ok(process) => process,
     };
+    println!("Running wc with id {:?}", decoder.id());
 
-    // Write a string to the `stdin` of `wc`.
-    //
-    // `stdin` has type `Option<ChildStdin>`, but since we know this instance
-    // must have one, we can directly `unwrap` it.
-    match process.stdin.unwrap().write_all(PANGRAM.as_bytes()) {
+    let mut stdio_in = String::new();
+    match BufReader::new(std::io::stdin()).read_to_string(&mut stdio_in) {
+        Err(why) => panic!("couldn't read wc stdout: {}", why.description()),
+        Ok(_) => {} //print!("io::stdin piped with:\n{}", stdio_in),
+    }
+
+    match decoder.stdin.unwrap().write_all(stdio_in.as_bytes()) {
         Err(why) => panic!("couldn't write to wc stdin: {}", why.description()),
-        Ok(_) => println!("sent pangram to wc"),
+        Ok(_) => println!("sent to decoder \n{}", stdio_in),
     }
 
     // Because `stdin` does not live after the above calls, it is `drop`ed,
@@ -33,8 +33,8 @@ fn main() {
 
     // The `stdout` field also has type `Option<ChildStdout>` so must be unwrapped.
     let mut s = String::new();
-    match process.stdout.unwrap().read_to_string(&mut s) {
+    match decoder.stdout.unwrap().read_to_string(&mut s) {
         Err(why) => panic!("couldn't read wc stdout: {}", why.description()),
-        Ok(_) => print!("wc responded with:\n{}", s),
+        Ok(_) => print!("decoder responded with:\n{}", s),
     }
 }
