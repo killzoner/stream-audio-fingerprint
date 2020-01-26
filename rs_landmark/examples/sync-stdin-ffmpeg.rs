@@ -21,7 +21,7 @@ fn main() {
             "fatal",
             "pipe:1"
         ])
-        //.stdin(Stdio::piped()) // FORBIDDEN, conflicts with pipe:0
+        .stdin(Stdio::inherit())
         .stdout(Stdio::piped()) 
         .spawn()
     {
