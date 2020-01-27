@@ -40,12 +40,14 @@ fn main() {
         
     println!("Running {} with id {:?}", cmd, decoder.id());
 
-    let reader = task::spawn(async move {
-        use async_std::io::BufReader;
-        let mut lines = BufReader::new(decoder.stdout.unwrap()).bytes();
-        while let Some(Ok(s)) = lines.next().await {
-            let output = String::from_utf8_lossy(&s);
-            print!("decoder responded with:\n{:?}", output);
+    let reader = task::spawn_blocking(|| {
+        //use async_std::io::BufReader;
+        use std::io::{BufReader};
+        use std::io::prelude::*;
+        let stream = decoder.stdout.unwrap();
+        let buf_read = BufReader::new(stream);
+        for line in buf_read.bytes() {
+            println!("{}", line.unwrap());
         }
     });
 
