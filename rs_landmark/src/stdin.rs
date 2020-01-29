@@ -2,7 +2,7 @@ use async_std::{io, prelude::*, task};
 use async_std::io::BufReader;
 
 /**
- * Warning, mspc::unbounded panics when trying to read
+ * Warning, mpsc::unbounded panics when trying to read
  * from empty buffer
  * 
  * async_std::sync::channel is mpmc by default and handles
