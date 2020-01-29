@@ -1,11 +1,8 @@
 use std::error::Error;
 use std::process::{Command, Stdio};
-use async_std::sync::channel;
 use async_std::{task};
-use futures::{select, FutureExt, StreamExt, AsyncBufReadExt, AsyncBufRead};
-
-const DEBUG: bool = true;
-const DEFAULT_BUF_SIZE: usize = 8 * 1024;
+//use async_std::sync::channel;
+//use futures::{select, FutureExt, StreamExt, AsyncBufReadExt, AsyncBufRead};
 
 //cat mp3_sample/sample.mp3  | cargo run --release --stream_ffmpeg_decoder
 fn main() {
@@ -42,48 +39,21 @@ fn main() {
     println!("Running {} with id {:?}", cmd, decoder.id());
 
     let reader = task::spawn_blocking(|| {
-        use std::io::{BufReader};
         use std::io::prelude::*;
-        let stream = decoder.stdout.unwrap();
-        
-        /*
-        let buf_read = BufReader::new(stream);
-        for line in buf_read.lines() {
-            println!("{}", line.unwrap());
-        }
-        */
-        
-        let mut buf_read = BufReader::new(stream);
-        let mut buffer = Vec::with_capacity(DEFAULT_BUF_SIZE);
+        let mut stream = decoder.stdout.unwrap();
+        let mut buffer = Vec::new();
 
-        /*
-         * TODO: match on things below to convert to 
-         * relatively valid UTF8 strings and debug
-         */
-        while let Ok(_) = buf_read.read_until('\n' as u8, &mut buffer) {
-            let output = String::from_utf8_lossy(&buffer);
-            print!("decoder responded with:\n{:?}", output);
+        match stream.read_to_end(&mut buffer) {
+            Err(why) => panic!("couldn't read decoder stdout: {}", why.description()),
+            Ok(_) => {
+                let output = String::from_utf8_lossy(&buffer);
+                print!("decoder responded with:\n{:?}", output);
+            },
         }
-
-        /*
-        match stream.read_line(&mut buffer) {
-            Ok(0) => None,
-            Ok(_n) => {
-                if buf.ends_with("\n") {
-                    buf.pop();
-                    if buf.ends_with("\r") {
-                        buf.pop();
-                    }
-                }
-                Some(Ok(buf))
-            }
-            Err(e) => Some(Err(e))
-        }*/
         
     });
 
     task::block_on(async {
-        use async_std::prelude::*;
         //wait for stdin and reader to have finished
         reader.await;
     })
