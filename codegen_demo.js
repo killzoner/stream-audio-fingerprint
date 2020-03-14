@@ -41,9 +41,9 @@ const fingerprinter = new Codegen();
 decoder.stdout.pipe(fingerprinter);
 
 fingerprinter.on("data", function(data) {
-	// for (let i=0; i<data.tcodes.length; i++) {
-	// 	console.log("time=" + data.tcodes[i] + " fingerprint=" + data.hcodes[i]);
-	// }
+	for (let i=0; i<data.tcodes.length; i++) {
+		console.log("time=" + data.tcodes[i] + " fingerprint=" + data.hcodes[i]);
+	}
 });
 
 fingerprinter.on("end", function() {

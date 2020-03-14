@@ -60,7 +60,7 @@ fn main() {
                     let _prints = runner.write(&buf[..n]);
                     if let Some(data) = _prints {
                         for i in 0..data.tcodes.len() {
-                            debug!("time={} fingerprint={}", data.tcodes[i], data.hcodes[i]);
+                            println!("time={} fingerprint={}", data.tcodes[i], data.hcodes[i]);
                         }
                     }
                     if n == 0 {
